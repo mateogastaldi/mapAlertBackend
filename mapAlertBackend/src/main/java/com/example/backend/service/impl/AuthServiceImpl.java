@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.example.backend.dto.JwtResponseDTO;
 import com.example.backend.dto.LoginRequestDTO;
 import com.example.backend.dto.RegisterRequestDTO;
+import com.example.backend.dto.UserResponseDTO;
 import com.example.backend.entity.Usuario;
 import com.example.backend.enums.Rol;
 import com.example.backend.repository.UsuarioRepository;
@@ -49,5 +50,16 @@ public class AuthServiceImpl implements AuthService {
                 .token(jwtService.getToken(user))
                 .build();
     }
-    
+
+    public UserResponseDTO me(String username) {
+        Usuario user = usuarioRepository.findByUsuario(username).orElseThrow();
+        return UserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsuario())
+                .email(user.getEmail())
+                .firstName(user.getNombres())
+                .lastName(user.getApellidos())
+                .role(user.getRol().name())
+                .build();
+    }
 }

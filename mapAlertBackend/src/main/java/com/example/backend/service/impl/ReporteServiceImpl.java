@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.backend.dto.ReporteDTO;
 import com.example.backend.entity.Reporte;
+import com.example.backend.entity.Usuario;
+import com.example.backend.enums.TipoReporte;
 import com.example.backend.exceptions.reportes.ReporteNotSaveException;
 import com.example.backend.exceptions.reportes.ReportesNotFindException;
 import com.example.backend.repository.ReporteRepository;
@@ -22,7 +24,7 @@ public class ReporteServiceImpl implements ReporteService {
     private final ReporteRepository reporteRepository;
 
     @Override
-    public ReporteDTO crearReporte(ReporteDTO dto) {
+    public ReporteDTO crearReporte(ReporteDTO dto, Usuario user) {
         Reporte reporte = new Reporte();
 
         reporte.setLatitud(dto.getLat());
@@ -35,26 +37,28 @@ public class ReporteServiceImpl implements ReporteService {
         reporte.setTipoReporte(dto.getReportType());
         reporte.setDescripcion(dto.getReportDescription());
         reporte.setFechaCreacion(LocalDateTime.now());
+        reporte.setActivo(true);
+        reporte.setUsuario(user);
 
         Reporte reporteGuardado;
 
-        try{
+        try {
             reporteGuardado = reporteRepository.save(reporte);
-        } catch (Exception e){
-            throw new ReporteNotSaveException(); 
-        } 
+        } catch (Exception e) {
+            throw new ReporteNotSaveException();
+        }
 
         ReporteDTO reporteGuardadoDTO = new ReporteDTO().builder()
-                                            .city(reporteGuardado.getCiudad())
-                                            .country(reporteGuardado.getPais())
-                                            .lat(reporteGuardado.getLatitud())
-                                            .lng(reporteGuardado.getLongitud())
-                                            .reportDescription(reporteGuardado.getDescripcion())
-                                            .reportType(reporteGuardado.getTipoReporte())
-                                            .state(reporteGuardado.getProvincia())
-                                            .street(reporteGuardado.getCalle())
-                                            .streetNumber(reporteGuardado.getNumeroCalle())
-                                            .build();
+                .city(reporteGuardado.getCiudad())
+                .country(reporteGuardado.getPais())
+                .lat(reporteGuardado.getLatitud())
+                .lng(reporteGuardado.getLongitud())
+                .reportDescription(reporteGuardado.getDescripcion())
+                .reportType(reporteGuardado.getTipoReporte())
+                .state(reporteGuardado.getProvincia())
+                .street(reporteGuardado.getCalle())
+                .streetNumber(reporteGuardado.getNumeroCalle())
+                .build();
 
         return reporteGuardadoDTO;
     }
@@ -62,9 +66,9 @@ public class ReporteServiceImpl implements ReporteService {
     @Override
     public List<ReporteDTO> listarReportes() {
         List<Reporte> reportes;
-        try{
+        try {
             reportes = reporteRepository.findAll();
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new ReportesNotFindException();
         }
 
@@ -72,16 +76,16 @@ public class ReporteServiceImpl implements ReporteService {
 
         for (Reporte reporte : reportes) {
             ReporteDTO reporteDTO = new ReporteDTO().builder()
-                                        .city(reporte.getCiudad())
-                                        .country(reporte.getPais())
-                                        .lat(reporte.getLatitud())
-                                        .lng(reporte.getLongitud())
-                                        .reportDescription(reporte.getDescripcion())
-                                        .reportType(reporte.getTipoReporte())
-                                        .state(reporte.getProvincia())
-                                        .street(reporte.getCalle())
-                                        .streetNumber(reporte.getNumeroCalle())
-                                        .build();
+                    .city(reporte.getCiudad())
+                    .country(reporte.getPais())
+                    .lat(reporte.getLatitud())
+                    .lng(reporte.getLongitud())
+                    .reportDescription(reporte.getDescripcion())
+                    .reportType(reporte.getTipoReporte())
+                    .state(reporte.getProvincia())
+                    .street(reporte.getCalle())
+                    .streetNumber(reporte.getNumeroCalle())
+                    .build();
 
             reportesDTO.add(reporteDTO);
         }
@@ -89,29 +93,103 @@ public class ReporteServiceImpl implements ReporteService {
         return reportesDTO;
     }
 
-    public List<ReporteDTO> getReportsByBounds(Double southLat, Double northLat, Double westLng , Double eastLng){
+    public List<ReporteDTO> getReportsByBounds(Double southLat, Double northLat, Double westLng, Double eastLng) {
         List<Reporte> reportes;
-        try{
+        try {
             reportes = reporteRepository.findByBounds(southLat, northLat, westLng, eastLng);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new ReportesNotFindException();
         }
         List<ReporteDTO> reportesDTO = new ArrayList<>();
-        
+
         for (Reporte reporte : reportes) {
             reportesDTO.add(new ReporteDTO().builder()
-                            .city(reporte.getCiudad())
-                            .country(reporte.getPais())
-                            .lat(reporte.getLatitud())
-                            .lng(reporte.getLongitud())
-                            .reportDescription(reporte.getDescripcion())
-                            .reportType(reporte.getTipoReporte())
-                            .state(reporte.getProvincia())
-                            .street(reporte.getCalle())
-                            .streetNumber(reporte.getNumeroCalle())
-                            .build());
+                    .city(reporte.getCiudad())
+                    .country(reporte.getPais())
+                    .lat(reporte.getLatitud())
+                    .lng(reporte.getLongitud())
+                    .reportDescription(reporte.getDescripcion())
+                    .reportType(reporte.getTipoReporte())
+                    .state(reporte.getProvincia())
+                    .street(reporte.getCalle())
+                    .streetNumber(reporte.getNumeroCalle())
+                    .build());
         }
         return reportesDTO;
-        
+
+    }
+
+    public List<ReporteDTO> getReportsByFilters(Boolean soloMios, LocalDateTime desdeFecha, List<String> categorias,
+            Usuario user) {
+        List<Reporte> reportes;
+        if (soloMios && soloMios != null && desdeFecha == null && (categorias.size() == 0 || categorias == null)) {
+            reportes = reporteRepository.getSoloMio(user.getId());
+        } else {
+            if (soloMios && soloMios != null && desdeFecha != null && (categorias.size() == 0 || categorias == null)) {
+                reportes = reporteRepository.getSoloMioDesdeFecha(user.getId(), desdeFecha);
+            } else {
+                if (soloMios && soloMios != null && desdeFecha != null && categorias.size() > 0) {
+                    reportes = reporteRepository.getAllFilters(user.getId(), desdeFecha, categorias);
+                } else {
+                    if ((!soloMios || soloMios == null) && desdeFecha != null
+                            && (categorias.size() == 0 || categorias == null)) {
+                        reportes = reporteRepository.getDesdeFecha(desdeFecha);
+                    } else {
+                        if ((!soloMios || soloMios == null) && desdeFecha != null && categorias.size() > 0) {
+                            reportes = reporteRepository.getDesdeFechaCategorias(desdeFecha, categorias);
+                        } else {
+                            reportes = reporteRepository.getAll();
+                        }
+                    }
+                }
+            }
+        }
+
+        List<ReporteDTO> reportesDTO = new ArrayList<>();
+        for (Reporte reporte : reportes) {
+            new ReporteDTO();
+            reportesDTO.add(ReporteDTO.builder()
+                    .city(reporte.getCiudad())
+                    .country(reporte.getPais())
+                    .lat(reporte.getLatitud())
+                    .lng(reporte.getLongitud())
+                    .reportDescription(reporte.getDescripcion())
+                    .reportType(reporte.getTipoReporte())
+                    .state(reporte.getProvincia())
+                    .street(reporte.getCalle())
+                    .streetNumber(reporte.getNumeroCalle())
+                    .build());
+        }
+
+        return reportesDTO;
+    }
+
+    public List<ReporteDTO> getByBoundsAndFilters(Double southLat, Double northLat, Double westLng, Double eastLng,
+            Boolean soloMios, LocalDateTime desdeFecha, List<TipoReporte> categorias, Usuario user) {
+
+        Long idUser = null;
+        if (soloMios != null && soloMios)
+            idUser = user.getId();
+
+        // Si la lista viene vacía la convertimos a null
+        if (categorias != null && categorias.isEmpty())
+            categorias = null;
+
+        List<Reporte> reportes = reporteRepository.getByBoundsAndFilters(
+                southLat, northLat, westLng, eastLng, idUser, desdeFecha, categorias);
+
+        return reportes.stream()
+                .map(reporte -> ReporteDTO.builder()
+                        .city(reporte.getCiudad())
+                        .country(reporte.getPais())
+                        .lat(reporte.getLatitud())
+                        .lng(reporte.getLongitud())
+                        .reportDescription(reporte.getDescripcion())
+                        .reportType(reporte.getTipoReporte())
+                        .state(reporte.getProvincia())
+                        .street(reporte.getCalle())
+                        .streetNumber(reporte.getNumeroCalle())
+                        .build())
+                .toList();
     }
 }
