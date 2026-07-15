@@ -23,7 +23,7 @@ public class ReporteDTO {
     @NotNull(message = "La longitud es obligatoria")
     private Double lng;
 
-
+    @NotNull(message = "La calle es obligatoria")
     private String street;
 
     @Min(value = 0, message = "El número de calle no puede ser negativo")

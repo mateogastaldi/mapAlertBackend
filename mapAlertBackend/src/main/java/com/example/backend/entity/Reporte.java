@@ -13,11 +13,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.CascadeType;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Data
 @Builder
@@ -25,6 +30,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "reporte")
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Reporte {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +40,9 @@ public class Reporte {
 
     @Column(name = "activo", nullable = false)
     private Boolean activo;
+
+    @Column(name = "fecha_desactivacion")
+    private LocalDateTime fechaDesactivacion;
 
     @Column(name = "latitud", nullable = false)
     private Double latitud;
@@ -68,5 +78,22 @@ public class Reporte {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
+
+    @OneToMany(mappedBy = "reporte", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Calificacion> calificaciones;
+
+
+
+    // Método para agregar una calificación al reporte
+    public void agregarCalificacion(Calificacion calificacion) {
+        calificaciones.add(calificacion);
+        calificacion.setReporte(this);
+    }
+
+    // Método para eliminar una calificación del reporte
+    public void eliminarCalificacion(Calificacion calificacion) {
+        calificaciones.remove(calificacion);
+        calificacion.setReporte(null);
+    }
 
 }

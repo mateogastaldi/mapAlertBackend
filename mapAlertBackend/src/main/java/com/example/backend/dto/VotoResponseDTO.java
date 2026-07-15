@@ -1,0 +1,17 @@
+package com.example.backend.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+public class VotoResponseDTO {
+    private Long reporteId;
+    private Boolean activo;
+}

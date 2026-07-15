@@ -39,3 +39,8 @@ jwt:
 # Server
 server:
   port: 8080
+
+# Umbral de votos para desactivar un reporte
+reporte:
+  votos:
+    umbral-desactivacion: 3

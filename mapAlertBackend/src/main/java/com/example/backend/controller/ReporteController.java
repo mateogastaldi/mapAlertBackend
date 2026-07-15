@@ -11,11 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.backend.dto.CalificacionRequestDTO;
+import com.example.backend.dto.CalificacionResponseDTO;
 import com.example.backend.dto.ReporteDTO;
 import com.example.backend.entity.Usuario;
 import com.example.backend.enums.TipoReporte;
 import com.example.backend.service.ReporteService;
-
 import jakarta.validation.Valid;
 
 @RestController
@@ -25,7 +26,7 @@ public class ReporteController {
 
     private final ReporteService reporteService;
 
-    public ReporteController(ReporteService reporteService) {
+    public ReporteController(ReporteService reporteService){
         this.reporteService = reporteService;
     }
 
@@ -63,5 +64,17 @@ public class ReporteController {
                 desdeFecha, categorias, user);
         return ResponseEntity.ok(reports);
     }
+
+    @PostMapping("/{reporteId}/calificar")
+    public ResponseEntity<CalificacionResponseDTO> calificarReporte(
+            @PathVariable Long reporteId,
+            @Valid @RequestBody CalificacionRequestDTO dto,
+            @AuthenticationPrincipal Usuario user) {
+
+        CalificacionRequestDTO dtoFinal = new CalificacionRequestDTO(dto.getPuntaje(), reporteId);
+        CalificacionResponseDTO result = reporteService.calificarReporte(dtoFinal, user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+    
 
 }
