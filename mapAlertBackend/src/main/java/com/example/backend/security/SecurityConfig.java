@@ -37,7 +37,11 @@ public class SecurityConfig {
             .authorizeHttpRequests(authRequest ->
                 authRequest
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/v1/reportes/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/reportes/bounds").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/reportes/filters").permitAll()
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/user/profile/**").authenticated()
+                .requestMatchers("/api/v1/reportes/**").authenticated()
                 .anyRequest().authenticated()
             )
             .sessionManagement(sessionManager ->

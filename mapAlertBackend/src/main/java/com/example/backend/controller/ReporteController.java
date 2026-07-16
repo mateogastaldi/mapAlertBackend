@@ -1,10 +1,8 @@
 package com.example.backend.controller;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
-import org.springframework.cglib.core.Local;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,19 +12,22 @@ import org.springframework.web.bind.annotation.*;
 import com.example.backend.dto.CalificacionRequestDTO;
 import com.example.backend.dto.CalificacionResponseDTO;
 import com.example.backend.dto.ReporteDTO;
+import com.example.backend.dto.VotoResponseDTO;
 import com.example.backend.entity.Usuario;
 import com.example.backend.enums.TipoReporte;
+import com.example.backend.enums.TipoVoto;
 import com.example.backend.service.ReporteService;
+
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/reportes")
-@CrossOrigin(origins = "http://localhost:5174") // después lo ajustamos
+@CrossOrigin(origins = "*")
 public class ReporteController {
 
     private final ReporteService reporteService;
 
-    public ReporteController(ReporteService reporteService){
+    public ReporteController(ReporteService reporteService) {
         this.reporteService = reporteService;
     }
 
@@ -34,7 +35,6 @@ public class ReporteController {
     public ResponseEntity<ReporteDTO> crearReporte(
             @Valid @RequestBody ReporteDTO dto,
             @AuthenticationPrincipal Usuario user) {
-
         ReporteDTO reporte = reporteService.crearReporte(dto, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(reporte);
     }
@@ -59,7 +59,6 @@ public class ReporteController {
             @RequestParam Double northLat,
             @RequestParam Double westLng,
             @RequestParam Double eastLng) {
-        System.out.println(southLat);
         List<ReporteDTO> reports = reporteService.getByBoundsAndFilters(southLat, northLat, westLng, eastLng, soloMios,
                 desdeFecha, categorias, user);
         return ResponseEntity.ok(reports);
@@ -70,11 +69,41 @@ public class ReporteController {
             @PathVariable Long reporteId,
             @Valid @RequestBody CalificacionRequestDTO dto,
             @AuthenticationPrincipal Usuario user) {
-
         CalificacionRequestDTO dtoFinal = new CalificacionRequestDTO(dto.getPuntaje(), reporteId);
         CalificacionResponseDTO result = reporteService.calificarReporte(dtoFinal, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
-    
 
+    @PostMapping("/{reporteId}/verificar")
+    public ResponseEntity<VotoResponseDTO> verificarReporte(
+            @PathVariable Long reporteId,
+            @AuthenticationPrincipal Usuario user) {
+        VotoResponseDTO result = reporteService.registrarVoto(reporteId, user, TipoVoto.CONFIRMA);
+        return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/{reporteId}/desestimar")
+    public ResponseEntity<VotoResponseDTO> desestimarReporte(
+            @PathVariable Long reporteId,
+            @AuthenticationPrincipal Usuario user) {
+        VotoResponseDTO result = reporteService.registrarVoto(reporteId, user, TipoVoto.NIEGA);
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/{reporteId}")
+    public ResponseEntity<ReporteDTO> actualizarReporte(
+            @PathVariable Long reporteId,
+            @Valid @RequestBody ReporteDTO dto,
+            @AuthenticationPrincipal Usuario user) {
+        ReporteDTO result = reporteService.actualizarReporte(reporteId, dto, user);
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/{reporteId}")
+    public ResponseEntity<Void> eliminarReporte(
+            @PathVariable Long reporteId,
+            @AuthenticationPrincipal Usuario user) {
+        reporteService.eliminarReporte(reporteId, user);
+        return ResponseEntity.noContent().build();
+    }
 }

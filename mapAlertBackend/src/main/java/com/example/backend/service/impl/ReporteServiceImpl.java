@@ -68,19 +68,41 @@ public class ReporteServiceImpl implements ReporteService {
             throw new ReporteNotSaveException();
         }
 
-        ReporteDTO reporteGuardadoDTO = new ReporteDTO().builder()
-                .city(reporteGuardado.getCiudad())
-                .country(reporteGuardado.getPais())
-                .lat(reporteGuardado.getLatitud())
-                .lng(reporteGuardado.getLongitud())
-                .reportDescription(reporteGuardado.getDescripcion())
-                .reportType(reporteGuardado.getTipoReporte())
-                .state(reporteGuardado.getProvincia())
-                .street(reporteGuardado.getCalle())
-                .streetNumber(reporteGuardado.getNumeroCalle())
-                .build();
+        return mapToDTO(reporteGuardado);
+    }
 
-        return reporteGuardadoDTO;
+    private ReporteDTO mapToDTO(Reporte reporte) {
+        if (reporte == null) return null;
+
+        long confirms = votoReporteRepository.countByReporteIdAndTipoVoto(reporte.getId(), TipoVoto.CONFIRMA);
+        long dismisses = votoReporteRepository.countByReporteIdAndTipoVoto(reporte.getId(), TipoVoto.NIEGA);
+
+        double avgRating = 0.0;
+        if (reporte.getCalificaciones() != null && !reporte.getCalificaciones().isEmpty()) {
+            avgRating = reporte.getCalificaciones().stream()
+                    .mapToDouble(c -> c.getPuntaje())
+                    .average()
+                    .orElse(0.0);
+        }
+
+        return ReporteDTO.builder()
+                .id(reporte.getId())
+                .activo(reporte.getActivo())
+                .usuarioId(reporte.getUsuario() != null ? reporte.getUsuario().getId() : null)
+                .usuarioName(reporte.getUsuario() != null ? reporte.getUsuario().getUsuario() : null)
+                .verificationCount(confirms)
+                .dismissCount(dismisses)
+                .averageRating(avgRating)
+                .lat(reporte.getLatitud())
+                .lng(reporte.getLongitud())
+                .street(reporte.getCalle())
+                .streetNumber(reporte.getNumeroCalle())
+                .city(reporte.getCiudad())
+                .state(reporte.getProvincia())
+                .country(reporte.getPais())
+                .reportType(reporte.getTipoReporte())
+                .reportDescription(reporte.getDescripcion())
+                .build();
     }
 
     @Override
@@ -92,22 +114,10 @@ public class ReporteServiceImpl implements ReporteService {
             throw new ReportesNotFindException();
         }
 
-        List<ReporteDTO> reportesDTO = null;
+        List<ReporteDTO> reportesDTO = new ArrayList<>();
 
         for (Reporte reporte : reportes) {
-            ReporteDTO reporteDTO = new ReporteDTO().builder()
-                    .city(reporte.getCiudad())
-                    .country(reporte.getPais())
-                    .lat(reporte.getLatitud())
-                    .lng(reporte.getLongitud())
-                    .reportDescription(reporte.getDescripcion())
-                    .reportType(reporte.getTipoReporte())
-                    .state(reporte.getProvincia())
-                    .street(reporte.getCalle())
-                    .streetNumber(reporte.getNumeroCalle())
-                    .build();
-
-            reportesDTO.add(reporteDTO);
+            reportesDTO.add(mapToDTO(reporte));
         }
 
         return reportesDTO;
@@ -123,17 +133,7 @@ public class ReporteServiceImpl implements ReporteService {
         List<ReporteDTO> reportesDTO = new ArrayList<>();
 
         for (Reporte reporte : reportes) {
-            reportesDTO.add(new ReporteDTO().builder()
-                    .city(reporte.getCiudad())
-                    .country(reporte.getPais())
-                    .lat(reporte.getLatitud())
-                    .lng(reporte.getLongitud())
-                    .reportDescription(reporte.getDescripcion())
-                    .reportType(reporte.getTipoReporte())
-                    .state(reporte.getProvincia())
-                    .street(reporte.getCalle())
-                    .streetNumber(reporte.getNumeroCalle())
-                    .build());
+            reportesDTO.add(mapToDTO(reporte));
         }
         return reportesDTO;
 
@@ -152,7 +152,7 @@ public class ReporteServiceImpl implements ReporteService {
                     reportes = reporteRepository.getAllFilters(user.getId(), desdeFecha, categorias);
                 } else {
                     if ((!soloMios || soloMios == null) && desdeFecha != null
-                            && (categorias.size() == 0 || categorias == null)) {
+                             && (categorias.size() == 0 || categorias == null)) {
                         reportes = reporteRepository.getDesdeFecha(desdeFecha);
                     } else {
                         if ((!soloMios || soloMios == null) && desdeFecha != null && categorias.size() > 0) {
@@ -167,18 +167,7 @@ public class ReporteServiceImpl implements ReporteService {
 
         List<ReporteDTO> reportesDTO = new ArrayList<>();
         for (Reporte reporte : reportes) {
-            new ReporteDTO();
-            reportesDTO.add(ReporteDTO.builder()
-                    .city(reporte.getCiudad())
-                    .country(reporte.getPais())
-                    .lat(reporte.getLatitud())
-                    .lng(reporte.getLongitud())
-                    .reportDescription(reporte.getDescripcion())
-                    .reportType(reporte.getTipoReporte())
-                    .state(reporte.getProvincia())
-                    .street(reporte.getCalle())
-                    .streetNumber(reporte.getNumeroCalle())
-                    .build());
+            reportesDTO.add(mapToDTO(reporte));
         }
 
         return reportesDTO;
@@ -199,17 +188,7 @@ public class ReporteServiceImpl implements ReporteService {
                 southLat, northLat, westLng, eastLng, idUser, desdeFecha, categorias);
 
         return reportes.stream()
-                .map(reporte -> ReporteDTO.builder()
-                        .city(reporte.getCiudad())
-                        .country(reporte.getPais())
-                        .lat(reporte.getLatitud())
-                        .lng(reporte.getLongitud())
-                        .reportDescription(reporte.getDescripcion())
-                        .reportType(reporte.getTipoReporte())
-                        .state(reporte.getProvincia())
-                        .street(reporte.getCalle())
-                        .streetNumber(reporte.getNumeroCalle())
-                        .build())
+                .map(this::mapToDTO)
                 .toList();
     }
 
@@ -283,14 +262,51 @@ public class ReporteServiceImpl implements ReporteService {
 
     private void evaluarDesactivacion(Reporte reporte) {
         long niegas = votoReporteRepository.countByReporteIdAndTipoVoto(reporte.getId(), TipoVoto.NIEGA);
-        long confirmas = votoReporteRepository.countByReporteIdAndTipoVoto(reporte.getId(), TipoVoto.CONFIRMA);
 
-        long votoNeto = niegas - confirmas;
-
-        if (votoNeto >= umbralDesactivacion) {
+        if (niegas >= 5) {
             reporte.setActivo(false);
+            reporte.setFechaDesactivacion(LocalDateTime.now());
             reporteRepository.save(reporte);
         }
+    }
+
+    @Override
+    @Transactional
+    public ReporteDTO actualizarReporte(Long id, ReporteDTO dto, Usuario user) {
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reporte no encontrado: " + id));
+
+        if (!reporte.getUsuario().getId().equals(user.getId()) 
+                && user.getRol() != com.example.backend.enums.Rol.ADMIN 
+                && user.getRol() != com.example.backend.enums.Rol.SUPER_ADMIN) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN, "No tiene permisos para modificar este reporte"
+            );
+        }
+
+        reporte.setTipoReporte(dto.getReportType());
+        reporte.setDescripcion(dto.getReportDescription());
+        Reporte actualizado = reporteRepository.save(reporte);
+        return mapToDTO(actualizado);
+    }
+
+    @Override
+    @Transactional
+    public void eliminarReporte(Long id, Usuario user) {
+        Reporte reporte = reporteRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Reporte no encontrado: " + id));
+
+        if (!reporte.getUsuario().getId().equals(user.getId()) 
+                && user.getRol() != com.example.backend.enums.Rol.ADMIN 
+                && user.getRol() != com.example.backend.enums.Rol.SUPER_ADMIN) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.FORBIDDEN, "No tiene permisos para eliminar este reporte"
+            );
+        }
+
+        reporte.setActivo(false);
+        reporte.setFechaDesactivacion(LocalDateTime.now());
+        reporteRepository.save(reporte);
     }
 
 }

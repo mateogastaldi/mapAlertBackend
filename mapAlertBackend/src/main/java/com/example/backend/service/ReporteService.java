@@ -29,4 +29,8 @@ public interface ReporteService {
         CalificacionResponseDTO calificarReporte(CalificacionRequestDTO dto, Usuario user);
 
         VotoResponseDTO registrarVoto(Long reporteId, Usuario user, TipoVoto tipoVoto);
+
+        ReporteDTO actualizarReporte(Long id, ReporteDTO dto, Usuario user);
+
+        void eliminarReporte(Long id, Usuario user);
 }

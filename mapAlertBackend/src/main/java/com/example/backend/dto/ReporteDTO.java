@@ -16,6 +16,21 @@ import com.example.backend.enums.TipoReporte;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReporteDTO {
+
+    private Long id;
+
+    private Boolean activo;
+
+    private Long usuarioId;
+
+    private String usuarioName;
+
+    private Long verificationCount;
+
+    private Long dismissCount;
+
+    private Double averageRating;
+
 //uso validaciones aca para evitar desde el principio datos incorrectos
     @NotNull(message = "La latitud es obligatoria")
     private Double lat;

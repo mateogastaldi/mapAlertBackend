@@ -22,7 +22,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "usuarios", uniqueConstraints = {@UniqueConstraint(columnNames = {"usuario"})})
-@Inheritance(strategy = InheritanceType.JOINED)
 public class Usuario implements UserDetails {
 
     @Id
@@ -47,6 +46,10 @@ public class Usuario implements UserDetails {
 
     @Column(name = "rol")
     protected Rol rol; 
+
+    @Column(name = "activo", nullable = false)
+    @Builder.Default
+    protected Boolean activo = true;
 
     @Column(name = "fecha_creacion")
     protected LocalDateTime fechaCreacion;
@@ -83,6 +86,6 @@ public class Usuario implements UserDetails {
     public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() { return true; }
+    public boolean isEnabled() { return activo != null && activo; }
 
 }
