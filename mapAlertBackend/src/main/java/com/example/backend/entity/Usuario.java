@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,40 +24,45 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "usuarios", uniqueConstraints = {@UniqueConstraint(columnNames = {"usuario"})})
+@Getter
+@Setter
 public class Usuario implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
-    protected Long id;
+    private Long id;
 
     @Column(name = "usuario", unique = true, nullable = false)
-    protected String usuario;
+    private String usuario;
 
     @Column(name = "contrasena")
-    protected String contrasena;
+    private String contrasena;
 
     @Column(name = "nombres")
-    protected String nombres;
+    private String nombres;
 
     @Column(name = "apellidos")
-    protected String apellidos;
+    private String apellidos;
 
     @Column(name = "email", unique = true, nullable = false)
-    protected String email;
+    private String email;
 
     @Column(name = "rol")
-    protected Rol rol; 
+    private Rol rol; 
+
+    @OneToOne(mappedBy = "perfilAdmin", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Administrador administrador;
 
     @Column(name = "activo", nullable = false)
     @Builder.Default
-    protected Boolean activo = true;
+    private Boolean activo = true;
 
     @Column(name = "fecha_creacion")
-    protected LocalDateTime fechaCreacion;
+    private LocalDateTime fechaCreacion;
 
     @PrePersist
-    protected void onCreate() {
+    private void onCreate() {
         this.fechaCreacion = LocalDateTime.now(); // se asigna automáticamente al guardar
     }
 
