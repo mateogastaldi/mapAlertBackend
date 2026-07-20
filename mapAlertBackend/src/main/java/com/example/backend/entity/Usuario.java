@@ -51,8 +51,9 @@ public class Usuario implements UserDetails {
     @Column(name = "rol")
     private Rol rol; 
 
-    @OneToOne(mappedBy = "perfilAdmin", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Administrador administrador;
+    // TODO: Falta crear la clase Administrador para esta relación
+    // @OneToOne(mappedBy = "perfilAdmin", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    // private Administrador administrador;
 
     @Column(name = "activo", nullable = false)
     @Builder.Default

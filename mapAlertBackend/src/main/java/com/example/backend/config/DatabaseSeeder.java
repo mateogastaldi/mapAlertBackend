@@ -25,26 +25,6 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Seed/Update Super Admin User
-        if (!usuarioRepository.findByUsuario("superadmin").isPresent()) {
-            Usuario superadmin = Usuario.builder()
-                    .usuario("superadmin")
-                    .contrasena(passwordEncoder.encode("Superadmin1234!"))
-                    .nombres("Super")
-                    .apellidos("Admin")
-                    .email("superadmin@mapalert.com")
-                    .rol(Rol.SUPER_ADMIN)
-                    .activo(true)
-                    .build();
-            usuarioRepository.save(superadmin);
-        } else {
-            usuarioRepository.findByUsuario("superadmin").ifPresent(user -> {
-                user.setContrasena("Superadmin1234!");
-                user.setRol(Rol.SUPER_ADMIN);
-                usuarioRepository.save(user);
-            });
-        }
-
         // Seed/Update Admin User
         if (!usuarioRepository.findByUsuario("admin").isPresent()) {
             Usuario admin = Usuario.builder()

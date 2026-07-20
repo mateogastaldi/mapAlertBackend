@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/reportes/bounds").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/reportes/filters").permitAll()
-                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/user/profile/**").authenticated()
                 .requestMatchers("/api/v1/reportes/**").authenticated()
                 .anyRequest().authenticated()
@@ -61,7 +61,7 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of("*"));
         
         // Métodos permitidos (incluyendo OPTIONS que es el "preflight" de CORS)
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         
         // Headers permitidos (necesarios para enviar JSON y el Token JWT)
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));

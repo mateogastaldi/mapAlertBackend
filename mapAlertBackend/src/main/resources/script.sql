@@ -55,3 +55,21 @@ CREATE TABLE calificacion (
   FOREIGN KEY (reporte_id) REFERENCES reporte(id_reporte) ON DELETE CASCADE,
   FOREIGN KEY (usuario_id) REFERENCES usuarios(id_usuario) ON DELETE CASCADE
 );
+
+INSERT INTO usuarios (
+    usuario,
+    contrasena,
+    nombres,
+    apellidos,
+    email,
+    rol,
+    activo
+) VALUES (
+    'emma',
+    '123456',
+    'Emma',
+    'Mazzuferi',
+    'emma@gmail.com',
+    'USUARIO',
+    TRUE
+);

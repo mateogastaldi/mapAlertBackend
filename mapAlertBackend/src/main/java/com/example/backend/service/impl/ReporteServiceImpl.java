@@ -275,8 +275,7 @@ public class ReporteServiceImpl implements ReporteService {
                 .orElseThrow(() -> new EntityNotFoundException("Reporte no encontrado: " + id));
 
         if (!reporte.getUsuario().getId().equals(user.getId()) 
-                && user.getRol() != com.example.backend.enums.Rol.ADMIN 
-                && user.getRol() != com.example.backend.enums.Rol.SUPER_ADMIN) {
+                && user.getRol() != com.example.backend.enums.Rol.ADMIN) {
             throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.FORBIDDEN, "No tiene permisos para modificar este reporte"
             );
@@ -295,8 +294,7 @@ public class ReporteServiceImpl implements ReporteService {
                 .orElseThrow(() -> new EntityNotFoundException("Reporte no encontrado: " + id));
 
         if (!reporte.getUsuario().getId().equals(user.getId()) 
-                && user.getRol() != com.example.backend.enums.Rol.ADMIN 
-                && user.getRol() != com.example.backend.enums.Rol.SUPER_ADMIN) {
+                && user.getRol() != com.example.backend.enums.Rol.ADMIN) {
             throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.FORBIDDEN, "No tiene permisos para eliminar este reporte"
             );

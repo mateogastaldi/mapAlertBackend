@@ -2,7 +2,6 @@ package com.example.backend.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,14 +12,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequestDTO {
+public class UsuarioUpdateDTO {
     @NotBlank(message = "El usuario es obligatorio")
     @Size(min = 4, max = 50)
     private String username;
 
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, max = 100, message = "La contraseña debe tener al menos 8 caracteres")
-    @Pattern(regexp = ".*[A-Z].*", message = "La contraseña debe contener al menos una letra mayúscula")
     private String password;
 
     @NotBlank(message = "El nombre es obligatorio")
@@ -32,6 +28,4 @@ public class RegisterRequestDTO {
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "Email inválido")
     private String email;
-
-
 }

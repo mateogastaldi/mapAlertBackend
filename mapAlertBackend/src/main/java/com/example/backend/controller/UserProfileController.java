@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.backend.dto.RegisterRequestDTO;
+import com.example.backend.dto.UsuarioUpdateDTO;
 import com.example.backend.entity.Usuario;
 import com.example.backend.service.UsuarioService;
 
@@ -24,7 +24,7 @@ public class UserProfileController {
     @PutMapping
     public ResponseEntity<Usuario> actualizarPerfil(
             Principal principal,
-            @Valid @RequestBody RegisterRequestDTO dto) {
+            @Valid @RequestBody UsuarioUpdateDTO dto) {
         Usuario usuario = usuarioService.actualizarPerfil(principal.getName(), dto);
         return ResponseEntity.ok(usuario);
     }

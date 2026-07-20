@@ -15,6 +15,7 @@ import com.example.backend.dto.RegisterRequestDTO;
 import com.example.backend.dto.UserResponseDTO;
 import com.example.backend.service.AuthService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -31,7 +32,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
     @PostMapping("/register")
-    public ResponseEntity<JwtResponseDTO> register(@RequestBody RegisterRequestDTO request){
+    public ResponseEntity<JwtResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request){
         System.out.println(request);
         return ResponseEntity.ok(authService.register(request));
     }
