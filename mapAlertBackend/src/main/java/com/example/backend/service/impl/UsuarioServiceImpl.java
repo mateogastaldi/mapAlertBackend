@@ -14,6 +14,7 @@ import com.example.backend.dto.UsuarioUpdateDTO;
 import com.example.backend.entity.Usuario;
 import com.example.backend.enums.Rol;
 import com.example.backend.repository.UsuarioRepository;
+import com.example.backend.service.AdministradorService;
 import com.example.backend.service.UsuarioService;
 
 @Service
@@ -21,12 +22,15 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AdministradorService administradorService;
 
     public UsuarioServiceImpl(
             UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            AdministradorService administradorService) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.administradorService = administradorService;
     }
 
     @Override
@@ -78,6 +82,11 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public Usuario crearUsuarioConRol(RegisterRequestDTO dto, Rol rol) {
+        if (rol == Rol.ADMIN) {
+            // Crea el Usuario y su fila asociada en "administradores" en un solo paso.
+            return administradorService.crearAdministrador(dto);
+        }
+
         if (usuarioRepository.existsByUsuario(dto.getUsername())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de usuario ya existe");
         }

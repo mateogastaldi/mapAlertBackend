@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.example.backend.entity.Administrador;
 import com.example.backend.entity.Usuario;
 import com.example.backend.entity.Reporte;
 import com.example.backend.enums.Rol;
@@ -26,24 +27,27 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Seed/Update Admin User
-        if (!usuarioRepository.findByUsuario("admin").isPresent()) {
-            Usuario admin = Usuario.builder()
-                    .usuario("admin")
-                    .contrasena(passwordEncoder.encode("Admin1234!"))
-                    .nombres("Admin")
-                    .apellidos("MapAlert")
-                    .email("admin@mapalert.com")
-                    .rol(Rol.ADMIN)
-                    .activo(true)
-                    .build();
-            usuarioRepository.save(admin);
-        } else {
-            usuarioRepository.findByUsuario("admin").ifPresent(user -> {
-                user.setContrasena("Admin1234!");
-                user.setRol(Rol.ADMIN);
-                usuarioRepository.save(user);
-            });
+        Usuario admin = usuarioRepository.findByUsuario("admin").orElseGet(() -> Usuario.builder()
+                .usuario("admin")
+                .nombres("Admin")
+                .apellidos("MapAlert")
+                .email("admin@mapalert.com")
+                .activo(true)
+                .build());
+        admin.setContrasena(passwordEncoder.encode("Admin1234!"));
+        admin.setRol(Rol.ADMIN);
+
+        // Asegura que el admin sembrado tenga su fila asociada en "administradores",
+        // ya que esa fila es el requisito para poder crear otros admins.
+        // Se guarda todo junto (cascade desde Usuario) para no persistir un
+        // Administrador que referencia un Usuario ya "detached" de otra transacción.
+        if (admin.getAdministrador() == null) {
+            Administrador administrador = new Administrador();
+            administrador.setUsuario(admin);
+            admin.setAdministrador(administrador);
         }
+
+        admin = usuarioRepository.save(admin);
 
         // Seed/Update Regular User (Vecino)
         if (!usuarioRepository.findByUsuario("vecino").isPresent()) {
