@@ -30,6 +30,7 @@ CREATE TABLE reporte (
     'CALLE_SIN_LUZ',
     'CORTE_DE_LUZ',
     'BASURA',
+    'FALTA_DE_AGUA',
     'OTRO'
   ) NOT NULL,
   descripcion VARCHAR(255),

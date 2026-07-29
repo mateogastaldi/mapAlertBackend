@@ -33,7 +33,6 @@ public class AuthController {
     }
     @PostMapping("/register")
     public ResponseEntity<JwtResponseDTO> register(@Valid @RequestBody RegisterRequestDTO request){
-        System.out.println(request);
         return ResponseEntity.ok(authService.register(request));
     }
     @GetMapping("/me")

@@ -1,0 +1,98 @@
+@startuml DiagramaEntidades
+
+title MapAlert Backend — Diagrama de Clases (Entidades)
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor #FEFEFE
+    BorderColor #555555
+    HeaderBackgroundColor #D0E4F7
+}
+skinparam enum {
+    BackgroundColor #FFF9C4
+    BorderColor #F9A825
+    HeaderBackgroundColor #FFF176
+}
+
+' ── ENUMS ──────────────────────────────
+enum Rol {
+    ADMIN
+    USER
+}
+
+enum TipoReporte {
+    BACHE
+    ACCIDENTE
+    CALLE_SIN_LUZ
+    CORTE_DE_LUZ
+    BASURA
+    OTRO
+}
+
+enum TipoVoto {
+    CONFIRMA
+    NIEGA
+}
+
+' ── ENTITIES ───────────────────────────
+class Usuario <<Entity>> {
+    - id : Long
+    - usuario : String
+    - contrasena : String
+    - nombres : String
+    - apellidos : String
+    - email : String
+    - rol : Rol
+    - activo : Boolean
+    - fechaCreacion : LocalDateTime
+    + getAuthorities() : Collection<GrantedAuthority>
+    + getPassword() : String
+    + getUsername() : String
+    + isEnabled() : boolean
+}
+
+class Reporte <<Entity>> {
+    - id : Long
+    - activo : Boolean
+    - fechaDesactivacion : LocalDateTime
+    - latitud : Double
+    - longitud : Double
+    - fechaCreacion : LocalDateTime
+    - calle : String
+    - numeroCalle : Integer
+    - ciudad : String
+    - provincia : String
+    - pais : String
+    - tipoReporte : TipoReporte
+    - descripcion : String
+    + agregarCalificacion(Calificacion) : void
+    + eliminarCalificacion(Calificacion) : void
+}
+
+class Calificacion <<Entity>> {
+    - id : Long
+    - puntaje : Integer
+}
+
+class VotoReporte <<Entity>> {
+    - id : Long
+    - tipoVoto : TipoVoto
+    - fechaVoto : LocalDateTime
+}
+
+class Administrador <<Entity>> {
+    - idUsuario : Long
+}
+
+' ── RELACIONES ─────────────────────────
+Usuario        "1"    --     "0..1"  Administrador  : <<OneToOne / MapsId>>
+Reporte        "0..*" -->    "1"     Usuario         : creado por\n<<ManyToOne>>
+Calificacion   "0..*" -->    "1"     Usuario         : emite\n<<ManyToOne>>
+VotoReporte    "0..*" -->    "1"     Usuario         : vota\n<<ManyToOne>>
+Reporte        "1"    *--    "0..*"  Calificacion    : contiene\n<<OneToMany cascade>>
+VotoReporte    "0..*" -->    "1"     Reporte         : sobre\n<<ManyToOne>>
+
+Usuario      ..>  Rol
+Reporte      ..>  TipoReporte
+VotoReporte  ..>  TipoVoto
+
+@enduml

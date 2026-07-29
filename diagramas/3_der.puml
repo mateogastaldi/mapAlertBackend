@@ -1,0 +1,68 @@
+@startuml DER
+
+title MapAlert Backend — Diagrama Entidad-Relación (DER)
+skinparam linetype ortho
+
+entity "usuarios" as U {
+    * id_usuario       : BIGINT       <<PK>>
+    ==
+    * usuario          : VARCHAR(50)  <<UNIQUE, NOT NULL>>
+    * email            : VARCHAR(100) <<UNIQUE, NOT NULL>>
+    * contrasena       : VARCHAR(255) <<NOT NULL>>
+      nombres          : VARCHAR(100)
+      apellidos        : VARCHAR(100)
+      rol              : ENUM('ADMIN','USER')
+    * activo           : BOOLEAN      <<NOT NULL, DEFAULT TRUE>>
+      fecha_creacion   : DATETIME
+}
+
+entity "administradores" as A {
+    * id_usuario : BIGINT <<PK, FK -> usuarios>>
+}
+
+entity "reporte" as R {
+    * id_reporte          : BIGINT       <<PK>>
+    ==
+    * activo              : BOOLEAN      <<NOT NULL>>
+      fecha_desactivacion : DATETIME
+    * latitud             : DOUBLE       <<NOT NULL>>
+    * longitud            : DOUBLE       <<NOT NULL>>
+    * fecha_creacion      : DATETIME     <<NOT NULL>>
+      calle               : VARCHAR(255)
+      numero_calle        : INT
+      ciudad              : VARCHAR(100)
+      provincia           : VARCHAR(100)
+      pais                : VARCHAR(100)
+    * tipo_reporte        : ENUM         <<NOT NULL>>
+      descripcion         : VARCHAR(500)
+    * id_usuario          : BIGINT       <<FK -> usuarios, NOT NULL>>
+}
+
+entity "calificacion" as C {
+    * id_calificacion : BIGINT <<PK>>
+    ==
+    * puntaje         : INT (0..10) <<NOT NULL>>
+      usuario_id      : BIGINT <<FK -> usuarios>>
+      reporte_id      : BIGINT <<FK -> reporte>>
+}
+
+entity "voto_reporte" as V {
+    * id_voto_reporte : BIGINT <<PK>>
+    ==
+    * tipo_voto       : ENUM('CONFIRMA','NIEGA') <<NOT NULL>>
+    * fecha_voto      : DATETIME                 <<NOT NULL>>
+    * usuario_id      : BIGINT <<FK -> usuarios, NOT NULL>>
+    * reporte_id      : BIGINT <<FK -> reporte,  NOT NULL>>
+    --
+    <<UNIQUE (usuario_id, reporte_id)>>
+}
+
+' ── RELACIONES ─────────────────────────
+U ||--o| A : "1 tiene 0..1"
+U ||--o{ R : "1 crea 0..*"
+U ||--o{ C : "1 emite 0..*"
+U ||--o{ V : "1 vota 0..*"
+R ||--o{ C : "1 recibe 0..*"
+R ||--o{ V : "1 recibe 0..*"
+
+@enduml

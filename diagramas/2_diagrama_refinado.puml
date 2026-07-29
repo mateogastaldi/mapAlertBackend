@@ -1,0 +1,394 @@
+@startuml DiagramaRefinado
+
+title MapAlert Backend — Diagrama de Clases Refinado
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+' ════════════════════════════════════════
+'  ENUMS
+' ════════════════════════════════════════
+package "enums" #FFFDE7 {
+    enum Rol           { 
+        ADMIN
+        USER
+         }
+    enum TipoReporte   { 
+        BACHE
+        ACCIDENTE
+        CALLE_SIN_LUZ
+        CORTE_DE_LUZ
+        BASURA
+        OTRO
+         }
+    enum TipoVoto      { 
+        CONFIRMA
+        NIEGA
+        }
+}
+
+' ════════════════════════════════════════
+'  ENTITIES
+' ════════════════════════════════════════
+package "entity" #E3F2FD {
+    class Usuario <<Entity>> {
+        - id : Long
+        - usuario : String
+        - contrasena : String
+        - nombres : String
+        - apellidos : String
+        - email : String
+        - rol : Rol
+        - activo : Boolean
+        - fechaCreacion : LocalDateTime
+    }
+    class Reporte <<Entity>> {
+        - id : Long
+        - activo : Boolean
+        - latitud : Double
+        - longitud : Double
+        - tipoReporte : TipoReporte
+        - descripcion : String
+        - fechaCreacion : LocalDateTime
+        - fechaDesactivacion : LocalDateTime
+    }
+    class Calificacion <<Entity>> {
+        - id : Long
+        - puntaje : Integer
+    }
+    class VotoReporte <<Entity>> {
+        - id : Long
+        - tipoVoto : TipoVoto
+        - fechaVoto : LocalDateTime
+    }
+    class Administrador <<Entity>> {
+        - idUsuario : Long
+    }
+
+    Usuario      "1"    --    "0..1"  Administrador
+    Reporte      "0..*" -->   "1"     Usuario
+    Calificacion "0..*" -->   "1"     Usuario
+    VotoReporte  "0..*" -->   "1"     Usuario
+    Reporte      "1"    *--   "0..*"  Calificacion
+    VotoReporte  "0..*" -->   "1"     Reporte
+}
+
+' ════════════════════════════════════════
+'  DTOs
+' ════════════════════════════════════════
+package "dto" #F3E5F5 {
+    together {
+        class ReporteDTO <<DTO>> {
+            - id : Long
+            - activo : Boolean
+            - usuarioId : Long
+            - usuarioName : String
+            - verificationCount : Long
+            - dismissCount : Long
+            - averageRating : Double
+            - lat : Double
+            - lng : Double
+            - street : String
+            - streetNumber : Integer
+            - city : String
+            - state : String
+            - country : String
+            - reportType : TipoReporte
+            - reportDescription : String
+        }
+        class CalificacionRequestDTO <<DTO>> {
+            - puntaje : Integer
+            - reporteId : Long
+        }
+        class CalificacionResponseDTO <<DTO>> {
+            - id : Long
+            - puntaje : Integer
+            - usuarioId : Long
+            - reporteId : Long
+        }
+        class VotoRequestDTO <<DTO>> {
+            - tipoVoto : TipoVoto
+        }
+    }
+    together {
+        class VotoResponseDTO <<DTO>> {
+            - reporteId : Long
+            - activo : Boolean
+        }
+        class LoginRequestDTO <<DTO>> {
+            - username : String
+            - password : String
+        }
+        class RegisterRequestDTO <<DTO>> {
+            - username : String
+            - password : String
+            - firstName : String
+            - lastName : String
+            - email : String
+        }
+        class JwtResponseDTO <<DTO>> {
+            - token : String
+        }
+    }
+    together {
+        class UserResponseDTO <<DTO>> {
+            - id : Long
+            - username : String
+            - email : String
+            - firstName : String
+            - lastName : String
+            - activo : Boolean
+            - role : String
+        }
+        class UsuarioUpdateDTO <<DTO>> {
+            - username : String
+            - password : String
+            - firstName : String
+            - lastName : String
+            - email : String
+        }
+        class HealthDTO <<DTO>> {
+            - status : String
+            - message : String
+        }
+    }
+
+    ReporteDTO      -[hidden]d- VotoResponseDTO
+    VotoResponseDTO -[hidden]d- UserResponseDTO
+}
+
+' ════════════════════════════════════════
+'  REPOSITORIES
+' ════════════════════════════════════════
+package "repository" #E8F5E9 {
+    interface UsuarioRepository <<Repository>> {
+        + existsByUsuario(String) : boolean
+        + existsByEmail(String) : boolean
+        + findByUsuario(String) : Optional<Usuario>
+        + findByEmail(String) : Optional<Usuario>
+    }
+    interface ReporteRepository <<Repository>> {
+        + findByBounds(Double,Double,Double,Double) : List<Reporte>
+        + getSoloMio(Long) : List<Reporte>
+        + getSoloMioDesdeFecha(Long,LocalDateTime) : List<Reporte>
+        + getAllFilters(Long,LocalDateTime,List) : List<Reporte>
+        + getDesdeFecha(LocalDateTime) : List<Reporte>
+        + getDesdeFechaCategorias(LocalDateTime,List) : List<Reporte>
+        + getAll() : List<Reporte>
+        + getByBoundsAndFilters(...) : List<Reporte>
+    }
+    interface CalificacionRepository <<Repository>> {
+        + findByReporteIdAndUsuarioId(Long,Long) : Optional<Calificacion>
+    }
+    interface VotoReporteRepository <<Repository>> {
+        + findByUsuarioIdAndReporteId(Long,Long) : Optional<VotoReporte>
+        + countByReporteIdAndTipoVoto(Long,TipoVoto) : long
+    }
+    interface AdministradorRepository <<Repository>> {
+    }
+
+    UsuarioRepository       ..>  Usuario
+    ReporteRepository       ..>  Reporte
+    CalificacionRepository  ..>  Calificacion
+    VotoReporteRepository   ..>  VotoReporte
+    AdministradorRepository ..>  Administrador
+}
+
+' ════════════════════════════════════════
+'  SERVICES — INTERFACES
+' ════════════════════════════════════════
+package "service" #FFF3E0 {
+    interface ReporteService <<Service>> {
+        + crearReporte(ReporteDTO, Usuario) : ReporteDTO
+        + listarReportes() : List<ReporteDTO>
+        + getReportsByBounds(...) : List<ReporteDTO>
+        + getReportsByFilters(...) : List<ReporteDTO>
+        + getByBoundsAndFilters(...) : List<ReporteDTO>
+        + calificarReporte(CalificacionRequestDTO, Usuario) : CalificacionResponseDTO
+        + registrarVoto(Long, Usuario, TipoVoto) : VotoResponseDTO
+        + actualizarReporte(Long, ReporteDTO, Usuario) : ReporteDTO
+        + eliminarReporte(Long, Usuario) : void
+    }
+    interface UsuarioService <<Service>> {
+        + crearUsuario(RegisterRequestDTO) : Usuario
+        + login(LoginRequestDTO) : Usuario
+        + listarTodos() : List<Usuario>
+        + crearUsuarioConRol(RegisterRequestDTO, Rol) : Usuario
+        + actualizarUsuario(Long, UsuarioUpdateDTO, Rol) : Usuario
+        + actualizarPerfil(String, UsuarioUpdateDTO) : Usuario
+        + cambiarRol(Long, Rol) : Usuario
+        + cambiarEstado(Long, Boolean) : Usuario
+        + darDeBajaUsuario(Long) : void
+    }
+    interface AuthService <<Service>> {
+        + login(LoginRequestDTO) : JwtResponseDTO
+        + register(RegisterRequestDTO) : JwtResponseDTO
+        + me(String) : UserResponseDTO
+    }
+    interface JwtService <<Service>> {
+        + getToken(UserDetails) : String
+        + getUsernameFromToken(String) : String
+        + isTokenValid(String, UserDetails) : boolean
+    }
+    interface AdministradorService <<Service>> {
+        + crearAdministrador(RegisterRequestDTO) : Usuario
+        + listarAdministradores() : List<Usuario>
+    }
+}
+
+' ════════════════════════════════════════
+'  SERVICES — IMPLEMENTATIONS
+' ════════════════════════════════════════
+package "service.impl" #FCE4EC {
+    class ReporteServiceImpl <<ServiceImpl>> {
+        - umbralDesactivacion : int
+        - reporteRepository : ReporteRepository
+        - calificacionRepository : CalificacionRepository
+        - votoReporteRepository : VotoReporteRepository
+    }
+    class UsuarioServiceImpl <<ServiceImpl>> {
+        - usuarioRepository : UsuarioRepository
+        - passwordEncoder : PasswordEncoder
+        - administradorService : AdministradorService
+    }
+    class AuthServiceImpl <<ServiceImpl>> {
+        - usuarioRepository : UsuarioRepository
+        - jwtService : JwtService
+        - passwordEncoder : PasswordEncoder
+        - authenticationManager : AuthenticationManager
+    }
+    class JwtServiceImpl <<ServiceImpl>> {
+    }
+    class AdministradorServiceImpl <<ServiceImpl>> {
+        - usuarioRepository : UsuarioRepository
+        - administradorRepository : AdministradorRepository
+        - passwordEncoder : PasswordEncoder
+    }
+}
+
+' ════════════════════════════════════════
+'  CONTROLLERS
+' ════════════════════════════════════════
+package "controller" #E0F7FA {
+    together {
+        class AuthController <<Controller>> {
+            - authService : AuthService
+            + login(LoginRequestDTO) : ResponseEntity<JwtResponseDTO>
+            + register(RegisterRequestDTO) : ResponseEntity<JwtResponseDTO>
+            + me(Principal) : ResponseEntity<UserResponseDTO>
+        }
+        class UsuarioController <<Controller>> {
+            - usuarioService : UsuarioService
+            + register(RegisterRequestDTO) : ResponseEntity<Usuario>
+            + login(LoginRequestDTO) : ResponseEntity<Usuario>
+        }
+        class HealthController <<Controller>> {
+            + health() : HealthDTO
+        }
+        class PruebaController <<Controller>> {
+            + welcome() : String
+        }
+    }
+    together {
+        class UsuarioAdminController <<Controller>> {
+            - usuarioService : UsuarioService
+            + listarTodos() : ResponseEntity<List<UserResponseDTO>>
+            + crearUsuario(RegisterRequestDTO, Rol) : ResponseEntity<UserResponseDTO>
+            + actualizarUsuario(Long, UsuarioUpdateDTO, Rol) : ResponseEntity<UserResponseDTO>
+            + cambiarRol(Long, Rol) : ResponseEntity<UserResponseDTO>
+            + cambiarEstado(Long, Boolean) : ResponseEntity<UserResponseDTO>
+            + darDeBajaUsuario(Long) : ResponseEntity<Void>
+        }
+        class UserProfileController <<Controller>> {
+            - usuarioService : UsuarioService
+            + actualizarPerfil(Principal, UsuarioUpdateDTO) : ResponseEntity<Usuario>
+            + darDeBajaCuenta(Usuario) : ResponseEntity<Void>
+        }
+        class AdministradorController <<Controller>> {
+            - administradorService : AdministradorService
+            + crearAdministrador(RegisterRequestDTO) : ResponseEntity<UserResponseDTO>
+            + listarAdministradores() : ResponseEntity<List<UserResponseDTO>>
+        }
+    }
+    class ReporteController <<Controller>> {
+        - reporteService : ReporteService
+        + crearReporte(ReporteDTO, Usuario) : ResponseEntity<ReporteDTO>
+        + listarReportesByBounds(Double,Double,Double,Double) : ResponseEntity<List<ReporteDTO>>
+        + listarReportesByBoundsAndFilters(...) : ResponseEntity<List<ReporteDTO>>
+        + calificarReporte(Long, CalificacionRequestDTO, Usuario) : ResponseEntity<CalificacionResponseDTO>
+        + verificarReporte(Long, Usuario) : ResponseEntity<VotoResponseDTO>
+        + desestimarReporte(Long, Usuario) : ResponseEntity<VotoResponseDTO>
+        + actualizarReporte(Long, ReporteDTO, Usuario) : ResponseEntity<ReporteDTO>
+        + eliminarReporte(Long, Usuario) : ResponseEntity<Void>
+    }
+
+    AuthController         -[hidden]d- UsuarioAdminController
+    UsuarioAdminController -[hidden]d- ReporteController
+}
+
+' ════════════════════════════════════════
+'  IMPLEMENTACIONES
+' ════════════════════════════════════════
+ReporteServiceImpl       ..|>  ReporteService
+UsuarioServiceImpl       ..|>  UsuarioService
+AuthServiceImpl          ..|>  AuthService
+JwtServiceImpl           ..|>  JwtService
+AdministradorServiceImpl ..|>  AdministradorService
+
+' ════════════════════════════════════════
+'  IMPL → REPOSITORY (dependencias)
+' ════════════════════════════════════════
+ReporteServiceImpl       -->  ReporteRepository
+ReporteServiceImpl       -->  CalificacionRepository
+ReporteServiceImpl       -->  VotoReporteRepository
+UsuarioServiceImpl       -->  UsuarioRepository
+UsuarioServiceImpl       -->  AdministradorService
+AuthServiceImpl          -->  UsuarioRepository
+AuthServiceImpl          -->  JwtService
+AdministradorServiceImpl -->  UsuarioRepository
+AdministradorServiceImpl -->  AdministradorRepository
+
+' ════════════════════════════════════════
+'  CONTROLLER → SERVICE (dependencias)
+' ════════════════════════════════════════
+AuthController           -->  AuthService
+UsuarioController        -->  UsuarioService
+UsuarioAdminController   -->  UsuarioService
+UserProfileController    -->  UsuarioService
+AdministradorController  -->  AdministradorService
+ReporteController        -->  ReporteService
+
+' ════════════════════════════════════════
+'  CONTROLLER → DTO (request / response)
+' ════════════════════════════════════════
+AuthController           ..>  LoginRequestDTO
+AuthController           ..>  RegisterRequestDTO
+AuthController           ..>  JwtResponseDTO
+AuthController           ..>  UserResponseDTO
+UsuarioController        ..>  RegisterRequestDTO
+UsuarioController        ..>  LoginRequestDTO
+UsuarioAdminController   ..>  RegisterRequestDTO
+UsuarioAdminController   ..>  UserResponseDTO
+UsuarioAdminController   ..>  UsuarioUpdateDTO
+UserProfileController    ..>  UsuarioUpdateDTO
+AdministradorController  ..>  RegisterRequestDTO
+AdministradorController  ..>  UserResponseDTO
+ReporteController        ..>  ReporteDTO
+ReporteController        ..>  CalificacionRequestDTO
+ReporteController        ..>  CalificacionResponseDTO
+ReporteController        ..>  VotoResponseDTO
+HealthController         ..>  HealthDTO
+
+' ════════════════════════════════════════
+'  CONTROLLER → ENTITY / ENUM (uso directo)
+' ════════════════════════════════════════
+UsuarioController        ..>  Usuario
+UsuarioAdminController   ..>  Usuario
+UsuarioAdminController   ..>  Rol
+UserProfileController    ..>  Usuario
+AdministradorController  ..>  Usuario
+ReporteController        ..>  Usuario
+ReporteController        ..>  TipoReporte
+ReporteController        ..>  TipoVoto
+
+@enduml

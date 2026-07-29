@@ -55,13 +55,6 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El email ya está registrado");
         }
 
-        if (request.getPassword() == null || request.getPassword().length() < 8 || !request.getPassword().matches(".*[A-Z].*")) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "La contraseña debe tener al menos 8 caracteres y contener al menos una letra mayúscula."
-            );
-        }
-
         Usuario user = Usuario.builder()
             .usuario(request.getUsername())
             .apellidos(request.getLastName())
